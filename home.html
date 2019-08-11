@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>PickVS</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+  <link rel="stylesheet" href="resources/css/style.css">
+  <link rel="stylesheet" href="resources/css/keyframes.css">
+  <link rel="stylesheet" href="resources/css/pageTransitions.css">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700|Roboto:400,500,700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <header class="home_header">
+    <ul class="home_header_navlist">
+      <li class="home_header_navitem on" value="1">인기</li>
+      <li class="home_header_navitem" value="2">신규</li>
+      <li class="home_header_navitem" value="3">활동</li>
+    </ul>
+  </header>
+  <div class="wrapper m-scene">
+    <section class="main-sec">
+      <ul class="main-sec__list">
+        <li class="main-sec__list-item">
+          <div class="card">
+            <a href="/detail.html">
+              <span class="card__desc ellipsis">제목이 두 줄 이상인 경우 어떻게 될까요 저는 테스트해보고 싶었습니다. 과연 어떻게 될까요 말줄임이 될까요</span>
+              <div class="card__vsimg">
+                <img src="resources/img/vs.png" alt="vs이미지">
+              </div>
+              <span class="card__desc ellipsis">제목이 두 줄 이상인 경우, 공간이 부족하다면 이런 방식으로 말줄임이 표시됩니다 과연 어떻게 될까요</span>
+              <div class="card__info-wrap">
+                <div class="card__info-area">
+                  <img class="card__icon" src="resources/img/vote_count.png" width="16px" height="16px" alt="투표수아이콘">
+                  <span class="card__icon-desc font_blue">1,945</span>
+                </div>
+                <div class="card__info-area">
+                  <img class="card__icon" src="resources/img/comment.png" width="16px" height="16px" alt="댓글수아이콘">
+                  <span class="card__icon-desc font_yellow">1,988</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        </li>
+      </ul>
+    </section>
+    <div class="toast scene_element">새로운 투표가 만들어졌습니다</div>
+    <a href="/write.html" class="fab">
+      투표 만들기
+    </a>
+  </div>
+  <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+  <script src="resources/js/smoothState.js"></script>
+  <script src="resources/js/common.js"></script>
+  <script src="resources/js/jsrender.min.js"></script>
+  <script id="cardTmpl" type="text/jsrender">
+    <li class="main-sec__list-item">
+      <div class="card">
+        <a href="/detail.html">
+          <span class="card__desc ellipsis">{{:title}}</span>
+          <div class="card__vsimg">
+            <img src="resources/img/vs.png" alt="vs이미지">
+          </div>
+          <span class="card__desc ellipsis">{{:title}}</span>
+          <div class="card__info-wrap">
+            <div class="card__info-area">
+              <img class="card__icon" src="resources/img/vote_count.png" width="16px" height="16px" alt="투표수아이콘">
+              <span class="card__icon-desc font_blue">{{:boardSeq}}</span>
+            </div>
+            <div class="card__info-area">
+              <img class="card__icon" src="resources/img/comment.png" width="16px" height="16px" alt="댓글수아이콘">
+              <span class="card__icon-desc font_yellow">{{:boardSeq}}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </li>
+  </script>
+  <script>
+    //메인페이지 인피니티스크롤
+    (function () {
+      var isExecuted = false;
+      var page = 2;
+      var mainCategory = 1;
+
+      // [D] 여기에 카테고리별 리스트 비동기 처리
+      $('.home_header_navlist').on('click', '.home_header_navitem', function (e) {
+        page = 2;
+        mainCategory = $(this).val();
+      })
+
+      $(window).scroll(function (e) {
+        var winH = $(window).height();
+        var docH = $(document).height();
+        var winTop = $(window).scrollTop();
+        if (winTop >= docH - winH && !isExecuted) {
+          isExecuted = true;
+          showSpinner($('.main-sec__list'));
+          $.ajax({
+            url: 'https://my-json-server.typicode.com/JaeCheolSim/JsonHolder/page1',
+            success: function (data) {
+              hideSpinner();
+              var tmpl = $.templates('#cardTmpl');
+              var html = tmpl.render(data);
+              $(html).appendTo($('.main-sec__list'));
+              isExecuted = false;
+            },
+            error: function (data) {
+              console.log(data);
+            }
+          });
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

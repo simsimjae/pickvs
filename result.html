@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>결과페이지</title>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+  <link rel="stylesheet" href="resources/css/style.css">
+  <link rel="stylesheet" href="resources/css/keyframes.css">
+  <link rel="stylesheet" href="resources/css/pageTransitions.css">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700|Roboto:400,500,700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <div class="wrapper wrapper--white m-scene">
+    <div class="page scene_element scene_element--fadeinright">
+      <header class="header">
+        <div class="header__cnt">
+          <div class="header__logo">
+            <a href="/" class="header__home">
+              <img src="resources/img/Back_blue@2x.png" width="16px" height="24px" alt="뒤로가기버튼" class="header__icon">
+              <span class="header__tx">홈</span>
+            </a>
+          </div>
+          <div class="header__title">결과보기</div>
+          <div class="header__infos"></div>
+        </div>
+      </header>
+      <section class="result__contwrap">
+        <div class="result__cont">
+          <div class="result__toptx">핫</div>
+          <div class="result__area">
+            <div class="result__left-area">
+              <div class="result__badges">
+                <img src="resources/img/mypick.png" width="66px" height="21px" alt="mypick" class="badge">
+              </div>
+              <div class="result__infoarea">
+                <p class="result__info">49%</p>
+                <p class="result__infosub">나와 1,298명의 선택</p>
+                <p class="result__infosub">999명의 선택</p>
+                <p class="result__footinfo">SDFSDF</p>
+              </div>
+            </div>
+            <img src="resources/img/fire.gif" alt="불이미지" class="result__vsimg">
+            <div class="result__right-area win">
+              <div class="result__badges">
+                <img src="resources/img/win.png" width="56px" height="21px" alt="win" class="badge">
+                <img src="resources/img/lose.png" width="56px" height="21px" alt="lose" class="badge">
+              </div>
+              <div class="result__infoarea">
+                <p class="result__info">51%</p>
+                <p class="result__infosub">나와 500명의 선택</p>
+                <p class="result__infosub">21명의 선택</p>
+                <p class="result__footinfo">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laboriosam enim
+                  quis quo asperiores, ipsam soluta temporibus odio accusantium quae perferendis quod dolorem omnis
+                  vitae ad sequi tempore placeat illum unde?</p>
+              </div>
+            </div>
+          </div>
+          <div class="result__reply-area">
+            <div class="result__reply">
+              <div class="result__reply-tit">
+                wefwef
+              </div>
+              <div class="result__reply-cont">
+                qwefqwef
+              </div>
+            </div>
+            <div class="result__reply">
+              <div class="result__reply-tit">
+                wefwef
+              </div>
+              <div class="result__reply-cont">
+                qwefqwef
+              </div>
+            </div>
+            <div class="result__reply">
+              <div class="result__reply-tit">
+                wefwef
+              </div>
+              <div class="result__reply-cont">
+                qwefqwef
+              </div>
+            </div>
+            <div class="result__reply">
+              <div class="result__reply-tit">
+                wefwef
+              </div>
+              <div class="result__reply-cont">
+                qwefqwef
+              </div>
+            </div>
+          </div>
+          <div class="result__write-wrap">
+            <div class="result__write-contwrap">
+              <textarea name="comment_content" id="comment_content" class="result__write" placeholder="댓글을 입력해주세요"
+                maxlength="500"></textarea>
+              <i class="fas fa-pen" onclick="$(this).parents('#writeComment').submit();"></i>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="result__footbtn" onclick="copyToClipboard('pickvs.com/detail?writing_no=${writingDtlDto.writing_no}');">
+      URL 복사</div>
+    <p class="toast scene_element">URL이 복사되었습니다.</p>
+  </div>
+
+
+  <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+  <script src="resources/js/smoothState.js"></script>
+  <script src="resources/js/common.js"></script>
+</body>
+
+</html>
