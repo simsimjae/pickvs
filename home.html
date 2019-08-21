@@ -17,42 +17,48 @@
 <body>
   <header class="home_header">
     <ul class="home_header_navlist">
-      <li class="home_header_navitem on" value="1">인기</li>
-      <li class="home_header_navitem" value="2">신규</li>
-      <li class="home_header_navitem" value="3">활동</li>
+      <li class="home_header_navitem on" value="0">인기</li>
+      <li class="home_header_navitem" value="1">신규</li>
+      <li class="home_header_navitem" value="2">활동</li>
     </ul>
   </header>
   <div class="wrapper m-scene">
     <section class="main-sec">
       <ul class="main-sec__list">
-        <li class="main-sec__list-item">
+        <!-- <li class="main-sec__list-item">
           <div class="card">
-            <a href="/detail.html">
+            <a href="/detail.html?writing_no=2">
               <span class="card__desc ellipsis">제목이 두 줄 이상인 경우 어떻게 될까요 저는 테스트해보고 싶었습니다. 과연 어떻게 될까요 말줄임이 될까요</span>
               <div class="card__vsimg">
-                <img src="resources/img/vs.png" alt="vs이미지">
+                <span class="sp00 vs"></span>
               </div>
               <span class="card__desc ellipsis">제목이 두 줄 이상인 경우, 공간이 부족하다면 이런 방식으로 말줄임이 표시됩니다 과연 어떻게 될까요</span>
               <div class="card__info-wrap">
                 <div class="card__info-area">
-                  <img class="card__icon" src="resources/img/vote_count.png" width="16px" height="16px" alt="투표수아이콘">
+                  <span class="sp00 vote"></span>
                   <span class="card__icon-desc font_blue">1,945</span>
                 </div>
                 <div class="card__info-area">
-                  <img class="card__icon" src="resources/img/comment.png" width="16px" height="16px" alt="댓글수아이콘">
+                  <span class="sp00 comment yellow"></span>
                   <span class="card__icon-desc font_yellow">1,988</span>
                 </div>
               </div>
             </a>
           </div>
-        </li>
+        </li> -->
       </ul>
     </section>
-    <div class="toast scene_element">새로운 투표가 만들어졌습니다</div>
-    <a href="/write.html" class="fab">
-      투표 만들기
-    </a>
   </div>
+  <footer>
+    <div class="bottom_navbar">
+      <button type="button" class="bottom_navbaritem sp42 search toggle_on_off">
+      </button>
+      <button type="button" class="bottom_navbaritem sp42 plus toggle_on_off">
+      </button>
+      <button type="button" class="bottom_navbaritem sp42 lock toggle_on_off">
+      </button>
+    </div>
+  </footer>
   <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
   <script src="resources/js/smoothState.js"></script>
   <script src="resources/js/common.js"></script>
@@ -60,20 +66,20 @@
   <script id="cardTmpl" type="text/jsrender">
     <li class="main-sec__list-item">
       <div class="card">
-        <a href="/detail.html">
-          <span class="card__desc ellipsis">{{:title}}</span>
+        <a href="/detail.html?writing_no={{:writing_no}}">
+          <span class="card__desc ellipsis">{{:fir_writ_content}}</span>
           <div class="card__vsimg">
-            <img src="resources/img/vs.png" alt="vs이미지">
+            <span class="sp00 vs"></span>
           </div>
-          <span class="card__desc ellipsis">{{:title}}</span>
+          <span class="card__desc ellipsis">{{:sec_writ_content}}</span>
           <div class="card__info-wrap">
             <div class="card__info-area">
-              <img class="card__icon" src="resources/img/vote_count.png" width="16px" height="16px" alt="투표수아이콘">
-              <span class="card__icon-desc font_blue">{{:boardSeq}}</span>
+              <span class="sp00 vote"></span>
+              <span class="card__icon-desc font_blue">{{:sum_vote}}</span>
             </div>
             <div class="card__info-area">
-              <img class="card__icon" src="resources/img/comment.png" width="16px" height="16px" alt="댓글수아이콘">
-              <span class="card__icon-desc font_yellow">{{:boardSeq}}</span>
+              <span class="sp00 comment yellow"></span>
+              <span class="card__icon-desc font_yellow">{{:sum_comment}}</span>
             </div>
           </div>
         </a>
@@ -81,40 +87,128 @@
     </li>
   </script>
   <script>
-    //메인페이지 인피니티스크롤
+    $(function () {
+      //인피니티 스크롤 위치 기억
+      $('.main-sec__list').on('click', 'a', function (e) {
+        var nextPage = $(e.currentTarget).attr('href');
+        var ifrWrapper = $('<div/>', {
+          class: "iframe_wrapper",
+          css: {
+            '-webkit-overflow-scrolling': touch,
+            "overflow": 'hidden auto'
+          }
+        });
+        var iframe = $('<iframe/>', {
+          src: nextPage,
+          scrolling: 'yes',
+          css: {
+            height: "100vh",
+            width: "100vw"
+          }
+        });
+        ifrWrapper.append(iframe);
+        $('body').children().hide();
+        $('body').prepend(ifrWrapper);
+        e.preventDefault();
+        window.history.pushState('', '', nextPage);
+      });
+      window.onpopstate = function (e) {
+        $('body').find('.iframe_wrapper').remove();
+        $('body').children().show();
+      }
+    });
+
+    //메인페이지 JS 모음
     (function () {
       var isExecuted = false;
-      var page = 2;
-      var mainCategory = 1;
+      var mainDatas = [];
+      var cateNum = 0;
+      var url = 'http://pickvs.com/getPagingList';
+      var mainCardList = $('.main-sec__list');
+      var tabcount = $('.home_header_navitem').length;
+      for (var i = 0; i < tabcount; i++) {
+        //카테고리 별로 필요한 데이터를 배열로 관리
+        mainDatas.push({
+          'prevPos': 0, //스크롤 탑 위치
+          'cards': null, //리스트의 카드들
+          'curPage': 1, //현재 보고 있는 페이지
+          'isFull': false //카테고리의 글을 모두 불러왔는지?
+        });
+      }
 
-      // [D] 여기에 카테고리별 리스트 비동기 처리
+      //상단 메뉴 탭 : 탭 이동 시각적 효과 및 초기 데이터 비동기 로드
       $('.home_header_navlist').on('click', '.home_header_navitem', function (e) {
-        page = 2;
-        mainCategory = $(this).val();
-      })
+        toggleTab(e);
+        savePrevState();
+        setCurrentState(e);
+      });
 
+      //인피니티스크롤
       $(window).scroll(function (e) {
         var winH = $(window).height();
         var docH = $(document).height();
         var winTop = $(window).scrollTop();
-        if (winTop >= docH - winH && !isExecuted) {
-          isExecuted = true;
-          showSpinner($('.main-sec__list'));
-          $.ajax({
-            url: 'https://my-json-server.typicode.com/JaeCheolSim/JsonHolder/page1',
-            success: function (data) {
-              hideSpinner();
-              var tmpl = $.templates('#cardTmpl');
-              var html = tmpl.render(data);
-              $(html).appendTo($('.main-sec__list'));
-              isExecuted = false;
-            },
-            error: function (data) {
-              console.log(data);
-            }
-          });
+        if (Math.ceil(winTop) >= docH - winH && !isExecuted && !mainDatas[cateNum].isFull) {
+          loadData(url, cateNum);
         }
       });
+
+      var savePrevState = function () {
+        var data = {};
+        data['prevPos'] = $(window).scrollTop();
+        data['cards'] = mainCardList.children().detach();
+        $.extend(mainDatas[cateNum], data);
+      };
+
+      var setCurrentState = function (e) {
+        cateNum = $(e.target).val();
+        mainDatas[cateNum] ? refreshDatas() : loadData(url, cateNum);
+      };
+
+      var restoreScroll = function () {
+        $('html, body').animate({ scrollTop: mainDatas[cateNum].prevPos }, 0);
+      }
+
+      var refreshDatas = function () { //기존 배열에 있는 데이터를 세팅
+        mainCardList.append((mainDatas[cateNum].cards));
+        restoreScroll();
+      };
+
+      //페이지 시작시 기본 데이터 세팅
+      $(function () {
+        loadData(url, 0);
+      });
+
+      var loadData = function (url, cateNum) { //새롭게 데이터를 가져와서 세팅
+        isExecuted = true;
+        var sendData = { "page": mainDatas[cateNum].curPage, "mainCategory": cateNum };
+        showSpinner(mainCardList);
+        $.ajax({
+          url,
+          type: 'GET',
+          dataType: 'json',
+          data: sendData,
+          success: function (data) {
+            hideSpinner();
+            appendCardsToList(data);
+            mainDatas[cateNum].curPage++;
+            if (!data.length) {
+              mainDatas[cateNum].isFull = true;
+            }
+          },
+          error: function (data) {
+            console.log(data);
+          }
+        });
+      }
+
+      var appendCardsToList = function (data) { //새롭게 데이터를 가져와서 리스트에 세팅
+        var tmpl = $.templates('#cardTmpl');
+        var html = tmpl.render(data);
+        $(html).appendTo(mainCardList);
+        isExecuted = false;
+      }
+
     })();
   </script>
 </body>

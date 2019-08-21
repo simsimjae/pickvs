@@ -132,7 +132,7 @@ table {
 html,
 body {
   font-family: 'Noto Sans KR', 'Roboto', sans-serif;
-  height: 100%;
+  min-height: 100%;
   box-sizing: border-box;
   color: black;
 }
@@ -145,4 +145,11 @@ a {
 textarea:focus,
 input:focus {
   outline: none;
+}
+
+button {
+  padding: 0;
+  outline: 0;
+  background-color: inherit;
+  border: 0;
 }

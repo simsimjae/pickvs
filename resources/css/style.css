@@ -1,4 +1,5 @@
 @import url("./reset.css");
+
 /* jquery-accordion.css */
 [data-accordion] [data-content] {
   overflow: hidden;
@@ -33,7 +34,7 @@
 
 .wrapper,
 .page {
-  height: 100%;
+  min-height: calc(100vh - 71px);
 }
 
 .blind {
@@ -90,9 +91,13 @@ textarea {
 
 /*header*/
 .home_header {
-  margin: 0 15px;
-  padding: 20px 10px 15px;
-  position: relative;
+  padding: 20px 25px 15px;
+  margin-bottom: 1px;
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
 }
 
 .home_header_navlist {
@@ -116,38 +121,25 @@ textarea {
 }
 
 .header_wrap {
-  display: table;
-  width: 100%;
-  height: 56px;
-  padding: 31px 20px 0;
-  table-layout: fixed;
-  box-sizing: border-box;
+  display: block;
+  padding: 9px 18px 9px 22px;
+  height: 42px;
+  border-bottom: 1px solid #f2f2f2;
 }
 
-.header_left,
-.header_center,
-.header_right {
-  display: table-cell;
-  width: 33.3%;
-  vertical-align: middle;
+.header_wrap .airplain,
+.header_wrap .complain {
+  float: right;
 }
 
-.header_left {
-  text-align: left;
-}
-
-.header_center {
-  text-align: center;
-  color: #b6b6b6;
-}
-
-.header_right {
-  text-align: right;
+.header_wrap .airplain {
+  margin-right: 23px;
 }
 
 /*main*/
 .main-sec {
   padding: 0 15px;
+  padding-bottom: 60px;
 }
 
 .main-sec .card__info-wrap {
@@ -182,13 +174,12 @@ textarea {
 }
 
 .main-spinner {
-  display: inline-block;
-  width: 46px;
+  display: block;
   height: 46px;
   font-size: 0;
   line-height: 1;
-  background: url("../img/spinner.png") no-repeat;
-  background-size: 100% 100%;
+  background: url("../img/spinner.png") no-repeat 50% 50%;
+  background-size: 46px 46px;
   animation-name: rotate;
   animation-iteration-count: infinite;
   animation-duration: 1s;
@@ -226,37 +217,35 @@ textarea {
 
 .card__prtg {
   display: none;
-}
-
-.card__prtg {
-  display: none;
   font-size: 46px;
   font-weight: bold;
   font-family: "Roboto";
   font-style: italic;
   right: 8px;
-  bottom: -12px;
+  bottom: -31px;
   position: absolute;
   background-color: white;
-  width: 85px;
-  height: 40px;
+  width: 96px;
+  height: 59px;
   text-align: center;
 }
 
-.card__prtg:after {
+.card__prtgmain:after {
   content: "%";
   font-size: 31px;
 }
 
-.card__prtg.later {
-  left: 8px;
-  top: -12px;
-  right: auto;
-  bottom: auto;
-}
-
 .card.on .card__prtg {
   color: #0f7bff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card.later.on .card__prtg {
+  top: -32px;
+  left: 8px;
 }
 
 .card .card__prtg {
@@ -295,7 +284,7 @@ textarea {
   line-height: 130%;
   margin: 10px 25px;
   text-align: center;
-  color: #3b3b3b;
+  color: black;
 }
 
 .main-sec .card__desc:first-child {
@@ -319,7 +308,7 @@ textarea {
   padding: 15px 20px 10px;
 }
 
-.card__vsimg img {
+.card__vsimg .sp00.vs {
   display: block;
   width: 40px;
   height: 20px;
@@ -343,10 +332,15 @@ textarea {
   overflow: hidden;
 }
 
-.card__info-writer {
-  font-size: 12px;
+.card__info-writer,
+.card__info-time {
+  display: block;
+  font-size: 11px;
   margin-left: 8px;
-  color: #b0b0b0;
+  color: #b6b6b6;
+}
+.card__info-time {
+  margin-top: 2px;
 }
 
 .card__info-left {
@@ -356,6 +350,7 @@ textarea {
 .card__info-right {
   float: right;
   display: flex;
+  margin-right: 8px;
 }
 
 .card__info-area + .card__info-area {
@@ -394,7 +389,6 @@ textarea {
 /*detail 글 상세 페이지*/
 .detail {
   padding: 16px 6px 0;
-  position: absolute;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -450,11 +444,16 @@ textarea {
 }
 
 .detail_replyarea {
-  padding: 10px 0 50px;
+  padding: 0 10px 50px;
 }
 
 .detail_wrap .detail_replyarea {
   display: none;
+}
+
+.detail_replytime {
+  color: #b6b6b6;
+  font-size: 11px;
 }
 
 .detail_txtarea {
@@ -482,32 +481,29 @@ textarea {
   left: 10px;
 }
 
+.card_wrap .sp00.vs {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .card_wrap.on .card--single {
   box-shadow: none;
 }
 
 .card_wrap.on .card label {
   box-shadow: inset 0 0 0 1px #e8e8e8;
-  padding-top: 25px;
+  padding-top: 32px;
 }
 
 .card_wrap.on .card.on label {
-  box-shadow: inset 0 0 0 1px #0f7bff;
-}
-
-.card_wrap.on .card_subdesc {
-  display: inline-block;
-  color: #b6b6b6;
-  opacity: 0.45;
+  box-shadow: inset 0 0 0 2px #0f7bff;
 }
 
 .card_wrap.on .card__desc {
   font-weight: bold;
   color: #b6b6b6;
-}
-
-.card_wrap.on .card__prtg {
-  display: inline-block;
 }
 
 .detail_bottom.on .detail_replyarea {
@@ -538,35 +534,62 @@ textarea {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 6px;
-  height: 40px;
+  padding: 6px 12px;
+  height: 52px;
   box-sizing: border-box;
-  box-shadow: rgba(0, 0, 0, 0.06) 0 -1px 5px 0px;
+  box-shadow: rgba(0, 0, 0, 0.12) 0 -2px 7px 0px;
   background: white;
 }
 
-.reply_input {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: #e8e8e8;
-  border: none;
+.reply_inputctn {
+  background: #f2f2f2;
+  padding: 8px 5px;
+  padding-right: 15px;
+  height: 40px;
   border-radius: 8px;
-  box-sizing: border-box;
-  padding: 0 40px 0 8px;
-  color: #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.reply_submit {
-  position: absolute;
+.reply_input {
   display: inline-block;
-  right: 10px;
-  top: 50%;
-  margin-top: -10px;
+  width: 100%;
+  border: none;
+  box-sizing: border-box;
+  color: #282828;
+  background: inherit;
+  font-size: 14px;
+  flex: 1;
+  padding: 0 5px 0 8px;
+}
+
+.reply_mention {
+  color: #b6b6b6;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 15px;
+  background: white;
+  padding: 4px 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reply_mention .sp00.close {
+  margin-left: 7px;
+}
+
+.detail_reply_subtitarea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7px;
 }
 
 .detail_replyitem {
   position: relative;
+  padding-bottom: 30px;
 }
 
 .detail_replyitem + .detail_replyitem {
@@ -588,25 +611,20 @@ textarea {
   background-size: 100% 100%;
 }
 
-.detail_reply_subarea.on .detail_reply_count {
-  display: none;
-}
-
 .detail_reply_subitem {
   position: relative;
-  margin-top: 15px;
+  margin-top: 30px;
 }
 
 .detail_replytit {
-  display: block;
+  display: inline-block;
   font-size: 14px;
   color: #b6b6b6;
-  font-weight: bold;
   margin-bottom: 5px;
 }
 
 .detail_replytit.my {
-  color: #0f7bff;
+  color: #117bff;
 }
 
 .detail_replycont {
@@ -619,7 +637,7 @@ textarea {
 .detail_reply_morewrap {
   height: 20px;
   width: 100%;
-  margin-top: 8px;
+  margin-top: 10px;
   position: relative;
   text-align: center;
 }
@@ -633,15 +651,6 @@ textarea {
   background: #e8e8e8;
   height: 1px;
   width: 100%;
-}
-
-.detail_reply_countimg {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: url(../img/comment.png) no-repeat;
-  background-size: 100% 100%;
-  margin-left: -1px;
 }
 
 .detail_reply_more {
@@ -659,6 +668,11 @@ textarea {
   z-index: 1;
 }
 
+.detail_reply_more.on {
+  background: #ffc907;
+  border: 1px solid black;
+}
+
 .detail_reply_count {
   margin-top: -1px;
   margin-left: 3px;
@@ -668,16 +682,13 @@ textarea {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  position: absolute;
   font-size: 11px;
   color: #b6b6b6;
-  top: 0;
-  left: 224px;
-  width: 71px;
+  padding-right: 10px;
 }
 
-.detail_reply_subitem .detail_replyinfos {
-  left: 194px;
+.detail_replyinfos > button {
+  margin-left: 14px;
 }
 
 .detail_replyup {
@@ -689,21 +700,32 @@ textarea {
 }
 
 .detail_replydown {
-  margin-left: 15px;
   background: url("../img/votedown.png") no-repeat;
   background-size: 100% 100%;
   display: block;
   width: 16px;
   height: 16px;
   margin-top: -2px;
+  margin-left: 14px;
 }
 
 .detail_replyuptx {
   margin-left: 4px;
 }
+.detail_replyinfos.up .detail_replyuptx {
+  color: #0f7bff;
+}
+.detail_replyinfos.down .detail_replyuptx {
+  color: #fe2469;
+}
+.card_subdesc {
+  display: none;
+  font-size: 12px;
+  color: #b6b6b6;
+}
 
-.detail_replydowntx {
-  margin-left: 5px;
+.card.on .card_subdesc {
+  display: none;
 }
 
 .card--single label {
@@ -731,11 +753,16 @@ textarea {
   line-height: 1.3;
 }
 
-.card_subdesc {
+.card__prtgsub {
   display: none;
   font-size: 12px;
   line-height: 1;
   font-weight: normal;
+}
+
+.card.on .card__prtgsub {
+  display: block;
+  font-style: normal;
 }
 
 .detail_wrap.on .card--single.on label {
@@ -746,13 +773,12 @@ textarea {
   color: #0f7bff;
 }
 
-.card_wrap.on .card--single.on .card_subdesc {
-  color: #0f7bff;
-  opacity: 0.45;
+.card_wrap.on .card .card_subdesc {
+  display: block;
 }
 
-.detail_wrap.on .card--single.on .card_subdesc {
-  display: inline-block;
+.card_wrap.on .card.on .card_subdesc {
+  display: none;
 }
 
 /*결과페이지 result*/
@@ -1053,40 +1079,20 @@ textarea {
   color: #008fd7;
 }
 
-/* floating action button */
-.fab {
-  display: block;
-  width: 120px;
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  border: 2px solid #008fd7;
-  border-radius: 50px;
-  color: #008fd7;
-  background: #fff;
-  font-size: 17px;
-  font-weight: bold;
-  position: fixed;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .toast {
   display: inline-block;
   position: fixed;
-  bottom: 70px;
+  top: 54px;
   left: 50%;
   transform: translateX(-50%);
-  height: 40px;
-  line-height: 40px;
   color: white;
-  background-color: rgba(0, 0, 0, 0.4);
-  border-radius: 50px;
+  background-color: rgba(0, 0, 0, 0.45);
+  border-radius: 20px;
   box-sizing: border-box;
-  padding: 0 20px;
+  padding: 10px 20px;
   text-align: center;
-  min-width: fit-content;
+  font-size: 18px;
+  white-space: nowrap;
 }
 
 .modal {
@@ -1169,4 +1175,151 @@ textarea {
   animation-fill-mode: both;
   animation-duration: 0.7s;
   animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.bottom_navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 43px;
+  background: white;
+}
+
+/* sprite 규격 없음 */
+.sp00 {
+  display: inline-block;
+  background-image: url(../img/sprite00.png);
+  background-repeat: no-repeat;
+  background-size: 40px auto;
+  width: 16px;
+  height: 16px;
+}
+
+.sp00.fire {
+  background-position: -12px 0;
+}
+
+.sp00.vote {
+  background-position: -12px -24px;
+}
+.sp00.comment.yellow {
+  background-position: -12px -47px;
+}
+.sp00.comment.gray {
+  background-position: -12px -69px;
+}
+.sp00.comment {
+  background-position: -12px -93px;
+}
+.sp00.vs {
+  background-position: 0 -116px;
+  width: 40px;
+  height: 19px;
+}
+.sp00.up {
+  background-position: -12px -142px;
+}
+.sp00.up.on {
+  background-position: -12px -165px;
+}
+.sp00.down {
+  background-position: -12px -188px;
+}
+.sp00.down.on {
+  background-position: -12px -211px;
+}
+.sp00.close {
+  background-position: -12px -234px;
+}
+.sp00.close.on {
+  background-position: -10px -257px;
+  width: 10px;
+  height: 10px;
+}
+.sp00.close_blk {
+  background-position: -12px -280px;
+}
+.sp00.arrow_right_blue {
+  background-position: -12px -303px;
+}
+
+/* sprite 이미지 24x24 여백포함 */
+.sp24 {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-image: url(../img/sprite24.png);
+  background-repeat: no-repeat;
+  background-size: 24px auto;
+}
+
+.sp24.back {
+  background-position-y: 0;
+}
+
+.sp24.airplain {
+  background-position-y: -24px;
+}
+.sp24.complain {
+  background-position-y: -48px;
+}
+.sp24.complain.on {
+  background-position-y: -72px;
+}
+
+.sp24.pencil {
+  background-position-y: -96px;
+}
+.sp24.pencil.on {
+  background-position-y: -120px;
+}
+/* sprite 이미지 42x42 여백포함 */
+.sp42 {
+  display: inline-block;
+  width: 42px;
+  height: 42px;
+  background-image: url(../img/sprite42.png);
+  background-repeat: no-repeat;
+  background-size: 42px auto;
+}
+
+.sp42.off {
+  opacity: 0.4;
+}
+
+.sp42.lock {
+  background-position-y: 0px;
+}
+
+.sp42.lock.on {
+  background-position-y: -42px;
+}
+
+.sp42.person {
+  background-position-y: -84px;
+}
+
+.sp42.person.on {
+  background-position-y: -126px;
+}
+
+.sp42.plus {
+  background-position-y: -168px;
+}
+
+.sp42.plus.on {
+  background-position-y: -210px;
+}
+
+.sp42.search {
+  background-position-y: -252px;
+}
+
+.sp42.search.on {
+  background-position-y: -294px;
 }
