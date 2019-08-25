@@ -1,3 +1,249 @@
+function areNotCompleted(group) {
+  //모두 입력되었으면 -1리턴
+  for (var i = 0; i < group.length; i++) {
+    if (!$(group[i]).hasClass("on")) return i;
+  }
+  return -1;
+}
+
+function copyToClipboard(url) {
+  showToast($(".toast"));
+  var $temp = $("<input>");
+  $("body").append($temp);
+  $temp.val(url).select();
+  document.execCommand("copy");
+  $temp.remove();
+}
+
+function toggleInputBdr(target) {
+  var len = target
+    .find("input, textarea")
+    .val()
+    .trim().length;
+  if (len > 0) target.addClass("on");
+  else if (len == 0) target.removeClass("on");
+}
+
+function toggleTab(e) {
+  $(e.delegateTarget)
+    .children()
+    .removeClass("on");
+  $(e.target).addClass("on");
+}
+
+function showToast(str) {
+  if ($(".toast").length) return false;
+  var toast = $(makeToast(str));
+  $(".wrapper").append(toast);
+}
+
+function getNumberInStr(str) {
+  return str.replace(/[^0-9]/g, "");
+}
+
+function scrollToBottom(target) {
+  $(target).animate({ scrollTop: $(document).height() }, 0);
+}
+
+function scrollToTarget(target) {
+  $("body,html").animate(
+    {
+      scrollTop: $(target).offset().top - $(target).height() * 3
+    },
+    300
+  );
+}
+
+var ssj = ssj || {};
+ssj.util = ssj.util || {};
+
+ssj.util.ajax = function(options) {
+  $.extend(this, options);
+  this.init();
+};
+
+ssj.util.ajax.prototype = {
+  init() {
+    this.assignElements();
+  },
+  assignElements() {
+    this.method = "GET";
+    this.paging = new Map(); // 비동기 요청 종류에 따라 페이지 위치 기억
+  },
+  sendRequest(url, data, tmplId, method, pageName) {
+    this.setMetaData(url, data, tmplId, method, pageName);
+    var oSelf = this;
+    return new Promise(function(resolve, reject) {
+      $.ajax({
+        url: oSelf.url,
+        method: oSelf.method,
+        data: oSelf.data,
+        success: function(data) {
+          console.log(data);
+          oSelf.increasePageNum(pageName);
+          resolve(oSelf.makeHtml(data));
+        },
+        error: function(data) {
+          reject(data);
+        }
+      });
+    });
+  },
+  sendUpdateRequest(url, data, method) {
+    this.setUpdateMetaData(url, data, method);
+    var oSelf = this;
+    return new Promise(function(resolve, reject) {
+      $.ajax({
+        url: oSelf.url,
+        method: oSelf.method,
+        data: oSelf.data,
+        success: function(data) {
+          console.log(data);
+          resolve(data);
+        },
+        error: function(data) {
+          reject(data);
+        }
+      });
+    });
+  },
+  increasePageNum(pageName) {
+    if (typeof pageName !== "undefined" && !this.isPageEmpty(pageName)) {
+      this.paging.set(pageName, this.getCurrentPageNum(pageName) + 1);
+    }
+  },
+  getCurrentPageNum(pageName) {
+    return !this.isPageEmpty(pageName) ? this.paging.get(pageName) : 1;
+  },
+  isPageEmpty(pageName) {
+    return !this.paging.get(pageName);
+  },
+  setMetaData(url, data, tmplId, method, pageName) {
+    this.setUrl(url);
+    this.setMethod(method);
+    this.setData(data);
+    this.setTmplId(tmplId);
+    if (typeof pageName !== "undefined") {
+      this.activatePaging(pageName);
+    }
+  },
+  setUpdateMetaData(url, data, method) {
+    this.setUrl(url);
+    this.setData(data);
+    this.setMethod(method);
+  },
+  setUrl(url) {
+    this.url = url;
+  },
+  setData(data) {
+    this.data = data;
+  },
+  setMethod(method) {
+    this.method = method;
+  },
+  setTmplId(id) {
+    this.ID_TMPL = id;
+  },
+  activatePaging(pageName) {
+    if (this.isPageEmpty(pageName)) {
+      this.paging.set(pageName, 1);
+    }
+  },
+  getTemplate() {
+    return $.templates(this.ID_TMPL);
+  },
+  makeHtml(data) {
+    return this.getTemplate().render(data);
+  }
+};
+
+ssj.util.spinner = function(options) {
+  $.extend(this, options);
+  this.init();
+};
+
+ssj.util.spinner.prototype = {
+  init() {
+    this.initVar();
+  },
+  initVar() {
+    this.spinner = this.makeSpinner();
+  },
+  makeSpinner() {
+    return $('<div class="main-spinner"></div>');
+  },
+  show() {
+    this.spinner.appendTo(this.target);
+  },
+  hide() {
+    this.spinner.detach();
+  },
+  setTarget: target => {
+    this.target = target;
+  }
+};
+
+ssj.util.swiper = function(options) {
+  this.metaData = options;
+  this.init();
+};
+
+ssj.util.swiper.prototype = {
+  init() {
+    this.initVar();
+  },
+  initVar() {
+    this.swiper = new Swiper(".swiper-container", this.metaData);
+  },
+  appendItem(slide) {
+    this.swiper.appendSlide(slide);
+  },
+  getActiveSlide() {
+    return this.swiper.slides[this.getActiveIndex()];
+  },
+  getActiveIndex() {
+    return this.swiper.activeIndex;
+  },
+  getTotalCount() {
+    return this.swiper.slides.length;
+  }
+};
+
+ssj.util.toast = function(options) {
+  $.extend(this, options);
+  this.init();
+};
+
+ssj.util.toast.prototype = {
+  init() {
+    this.assignElements();
+  },
+  assignElements() {
+    this.toast = $(`<div class="toast scene_element"></div>`);
+  },
+  show(message, duration) {
+    this.toast.text(message);
+    this.duration = duration;
+    $(".m-scene").append(this.toast);
+    this.activateFadeEffect();
+  },
+  hide() {
+    this.toast.detach();
+  },
+  activateFadeEffect() {
+    oSelf = this;
+    oSelf.toast.addClass("scene_element--fadein");
+    oSelf.toast.removeClass("scene_element--fadeout");
+    setTimeout(() => {
+      oSelf.toast.removeClass("scene_element--fadein");
+      oSelf.toast.addClass("scene_element--fadeout");
+      setTimeout(() => {
+        oSelf.hide();
+      }, 500);
+    }, oSelf.duration);
+  }
+};
+
 $(function() {
   "use strict";
 
@@ -160,223 +406,4 @@ $(function() {
     var hiddenArea = $(this).siblings(".acdo_cont");
     wrapper.toggleClass("on");
   });
-
-  //멘션
-  $("body").on("click", ".detail_replytit", function(e) {
-    var mention = makeMention($(e.target).text());
-    var inputArea = $(".reply_inputctn");
-    !inputArea.children(".reply_mention").length && inputArea.prepend(mention);
-  });
 });
-
-function areNotCompleted(group) {
-  //모두 입력되었으면 -1리턴
-  for (var i = 0; i < group.length; i++) {
-    if (!$(group[i]).hasClass("on")) return i;
-  }
-  return -1;
-}
-
-function copyToClipboard(url) {
-  showToast($(".toast"));
-  var $temp = $("<input>");
-  $("body").append($temp);
-  $temp.val(url).select();
-  document.execCommand("copy");
-  $temp.remove();
-}
-
-//토스트
-function makeToast(str) {
-  return `<div class="toast scene_element">${str}</div>`;
-}
-
-function showToast(str) {
-  if ($(".toast").length) return false;
-  var toast = $(makeToast(str));
-  $(".wrapper").append(toast);
-  toast.addClass("scene_element--fadein");
-  toast.removeClass("scene_element--fadeout");
-  setTimeout(() => {
-    toast.removeClass("scene_element--fadein");
-    toast.addClass("scene_element--fadeout");
-    setTimeout(() => {
-      toast.remove();
-    }, 500);
-  }, 2000);
-}
-
-var toggleInputBdr = function(target) {
-  var len = target
-    .find("input, textarea")
-    .val()
-    .trim().length;
-  if (len > 0) target.addClass("on");
-  else if (len == 0) target.removeClass("on");
-};
-
-function toggleTab(e) {
-  $(e.delegateTarget)
-    .children()
-    .removeClass("on");
-  $(e.target).addClass("on");
-}
-
-function makeMention(str) {
-  return $(`
-  <div class="reply_mention">${str}
-    <button class="sp00 close" onclick="$(this).parent().remove()"></button>
-  </div>
-  `);
-}
-
-var ID_TMPL_SLIDE = "#slideTmpl";
-var ID_TMPL_REPLY = "#replyTmpl";
-
-var URL_BASE = "http://pickvs.com";
-var URL_CREATE_COMMENT = URL_BASE + "/writeComment";
-var URL_UPDATE_VOTECOUNT = URL_BASE + "/vote";
-var URL_READ_SLIDE_DATA = URL_BASE + "/getDetailDtoList";
-var URL_READ_FIRST_SLIDE_DATA = URL_BASE + "/getWritingDtlDto";
-
-var PAGE_NAME_SWIPE = "swipe";
-
-var ssj = {};
-ssj.util = ssj.util || {};
-
-ssj.util.ajax = function(options) {
-  $.extend(this, options);
-  this.init();
-};
-
-ssj.util.ajax.prototype = {
-  init() {
-    this.assignElements();
-  },
-  assignElements() {
-    this.method = "GET";
-    this.paging = new Map(); // 비동기 요청 종류에 따라 페이지 위치 기억
-  },
-  sendRequest(url, data, tmplId, pageName, method) {
-    this.setMetaData(url, data, tmplId, pageName, method);
-    var oSelf = this;
-    return new Promise(function(resolve, reject) {
-      $.ajax({
-        url: oSelf.url,
-        method: oSelf.method,
-        data: oSelf.data,
-        success: function(data) {
-          console.log(data);
-          oSelf.increasePageNum(pageName);
-          resolve(oSelf.makeHtml(data));
-        },
-        error: function(data) {
-          reject(data);
-        }
-      });
-    });
-  },
-  increasePageNum(pageName) {
-    if (typeof pageName !== "undefined" && !this.isPageEmpty(pageName)) {
-      this.paging.set(pageName, this.getCurrentPageNum(pageName) + 1);
-    }
-  },
-  getCurrentPageNum(pageName) {
-    return !this.isPageEmpty(pageName) ? this.paging.get(pageName) : 1;
-  },
-  isPageEmpty(pageName) {
-    return !this.paging.get(pageName);
-  },
-  setMetaData(url, data, tmplId, pageName, method) {
-    this.setUrl(url);
-    this.setMethod(method);
-    this.setData(data);
-    this.setTmplId(tmplId);
-    if (typeof pageName !== "undefined") {
-      this.activatePaging(pageName);
-    }
-  },
-  setUrl(url) {
-    this.url = url;
-  },
-  setData(data) {
-    this.data = data;
-  },
-  setMethod(method) {
-    this.method = method;
-  },
-  setTmplId(id) {
-    this.ID_TMPL = id;
-  },
-  activatePaging(pageName) {
-    if (this.isPageEmpty(pageName)) {
-      this.paging.set(pageName, 1);
-    }
-  },
-  getTemplate() {
-    return $.templates(this.ID_TMPL);
-  },
-  makeHtml(data) {
-    return this.getTemplate().render(data);
-  }
-};
-
-ssj.util.spinner = function(options) {
-  $.extend(this, options);
-  this.init();
-};
-
-ssj.util.spinner.prototype = {
-  init() {
-    this.initVar();
-  },
-  initVar() {
-    this.spinner = this.makeSpinner();
-  },
-  makeSpinner() {
-    return $('<div class="main-spinner"></div>');
-  },
-  show() {
-    this.spinner.appendTo(this.target);
-  },
-  hide() {
-    this.spinner.detach();
-  },
-  setTarget: target => {
-    this.target = target;
-  }
-};
-
-ssj.util.swiper = function(options) {
-  this.metaData = options;
-  this.init();
-};
-
-ssj.util.swiper.prototype = {
-  init() {
-    this.initVar();
-  },
-  initVar() {
-    this.swiper = new Swiper(".swiper-container", this.metaData);
-  },
-  appendItem(slide) {
-    this.swiper.appendSlide(slide);
-  },
-  getActiveSlide() {
-    return this.swiper.slides[this.getActiveIndex()];
-  },
-  getActiveIndex() {
-    return this.swiper.activeIndex;
-  },
-  getTotalCount() {
-    return this.swiper.slides.length;
-  }
-};
-
-function getNumberInStr(str) {
-  return str.replace(/[^0-9]/g, "");
-}
-
-function scrollToBottom(target) {
-  $(target).animate({ scrollTop: $(document).height() }, 0);
-}

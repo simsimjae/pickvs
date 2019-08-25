@@ -336,7 +336,7 @@ textarea {
 .card__info-time {
   display: block;
   font-size: 11px;
-  margin-left: 8px;
+  margin-left: 11px;
   color: #b6b6b6;
 }
 .card__info-time {
@@ -564,6 +564,28 @@ textarea {
   padding: 0 5px 0 8px;
 }
 
+@keyframes onlyScaleIn {
+  from {
+    transform: scale(1);
+    -webkit-transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+    -webkit-transform: scale(1.1);
+  }
+}
+
+@-webkit-keyframes onlyScaleIn {
+  from {
+    transform: scale(1);
+    -webkit-transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+    -webkit-transform: scale(1.1);
+  }
+}
+
 .reply_mention {
   color: #b6b6b6;
   font-size: 14px;
@@ -571,9 +593,16 @@ textarea {
   border-radius: 15px;
   background: white;
   padding: 4px 11px;
+  margin-top: 1px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  animation-name: onlyScaleIn;
+  animation-duration: 0.1s;
+  animation-direction: alternate;
+  animation-fill-mode: both;
+  animation-iteration-count: 2;
+  animation-timing-function: linear;
 }
 
 .reply_mention .sp00.close {
@@ -620,7 +649,6 @@ textarea {
   display: inline-block;
   font-size: 14px;
   color: #b6b6b6;
-  margin-bottom: 5px;
 }
 
 .detail_replytit.my {
