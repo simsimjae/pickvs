@@ -1,3 +1,62 @@
+var ssj = ssj || {};
+ssj.util = ssj.util || {};
+ssj.view = ssj.view || {};
+var oAjax, oSpinner, oToast, oleanModal;
+
+
+(function($){
+
+  // common function
+  function prevent(e){
+    e.preventDefault();
+  }
+
+  // extend jQuery
+  $.extend({
+    scrollLock : function (lock) {
+      lock ? 
+        document.addEventListener('touchmove', prevent, { passive: false }) :
+        document.removeEventListener('touchmove', prevent, { passive: false })
+    },
+    wait: function (delay) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => resolve(), delay);
+      });
+    }
+  });
+
+  $.observer = {
+    container: [],
+    register: function (topic, observer, context = this) {
+      this.container[topic] || (this.container[topic] = []);
+      this.container[topic].push(observer.bind(context));
+    },
+    remove: function (topic, observer) {
+      if (this.isEmpty(topic)) return;
+      var index = this.container[topic].indexOf(observer);
+      if (~index) {
+        this.container[topic].splice(index, 1);
+      }
+    },
+    notify: function (topic, message) {
+      return new Promise((resolve, reject) => {
+        if (this.isEmpty(topic)) return;
+        const results = [];
+        this.container[topic].forEach(observer => {
+          const result = observer(message);
+          results.push(result);
+        });
+        resolve(results);
+      });
+    },
+    isEmpty: function (topic) {
+      return !this.container[topic];
+    }
+  }
+
+})(jQuery);
+
+
 function areNotCompleted(group) {
   //모두 입력되었으면 -1리턴
   for (var i = 0; i < group.length; i++) {
@@ -6,29 +65,60 @@ function areNotCompleted(group) {
   return -1;
 }
 
-function copyToClipboard(url) {
-  showToast($(".toast"));
-  var $temp = $("<input>");
-  $("body").append($temp);
-  $temp.val(url).select();
-  document.execCommand("copy");
-  $temp.remove();
+function copyToClipboard(string) {
+  let textarea;
+  let result;
+
+  try {
+    textarea = document.createElement('textarea');
+    textarea.setAttribute('readonly', true);
+    textarea.setAttribute('contenteditable', true);
+    textarea.style.position = 'fixed'; // prevent scroll from jumping to the bottom when focus is set.
+    textarea.value = string;
+
+    document.body.appendChild(textarea);
+
+    textarea.focus();
+    textarea.select();
+
+    const range = document.createRange();
+    range.selectNodeContents(textarea);
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    textarea.setSelectionRange(0, textarea.value.length);
+    result = document.execCommand('copy');
+  } catch (err) {
+    console.error(err);
+    result = null;
+  } finally {
+    document.body.removeChild(textarea);
+  }
+
+  // manual copy fallback using prompt
+  if (!result) {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const copyHotkey = isMac ? '⌘C' : 'CTRL+C';
+    result = prompt(`Press ${copyHotkey}`, string); // eslint-disable-line no-alert
+    if (!result) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function toggleInputBdr(target) {
-  var len = target
-    .find("input, textarea")
-    .val()
-    .trim().length;
-  if (len > 0) target.addClass("on");
-  else if (len == 0) target.removeClass("on");
+  var len = $(target).find("input, textarea").val().trim().length;
+  if (len > 0) $(target).addClass("on");
+  else if (len == 0) $(target).removeClass("on");
 }
 
-function toggleTab(e) {
-  $(e.delegateTarget)
-    .children()
-    .removeClass("on");
-  $(e.target).addClass("on");
+function toggleTab(indexㅡ) {
+  var target = $('.home_header_navlist');
+  $(target.children()).removeClass("on");
+  $(target.children().eq(index)).addClass("on");
 }
 
 function showToast(str) {
@@ -41,23 +131,42 @@ function getNumberInStr(str) {
   return str.replace(/[^0-9]/g, "");
 }
 
-function scrollToBottom(target) {
-  $(target).animate({ scrollTop: $(document).height() }, 0);
+function scrollToBottom(target = $(document), duration = 0) {
+  $("html, body").animate({
+    scrollTop: $(target).height()
+  }, duration);
 }
 
-function scrollToTarget(target) {
-  $("body,html").animate(
-    {
-      scrollTop: $(target).offset().top - $(target).height() * 3
+function scrollToTop(duration = 0) {
+  $("html, body").animate({
+    scrollTop: 0
+  }, duration);
+}
+
+function scrollToTarget(target, duration = 300) {
+  $("body,html").animate({
+      scrollTop: $(target).offset().top - $(window).height() / 5
     },
-    300
+    duration
   );
 }
+function scrollByPosition(scrollTop){
+  $('html, body').animate({scrollTop},0);
+}
 
-var ssj = ssj || {};
-ssj.util = ssj.util || {};
+function getWritingNoFromURL(){
+  return getNumberInStr(window.location.search);
+}
 
-ssj.util.ajax = function(options) {
+function isAndroid(){
+  return $('body').hasClass('body_and');
+}
+
+function isIos(){
+  return $('body').hasClass('body_ios');
+}
+
+ssj.util.ajax = function (options) {
   $.extend(this, options);
   this.init();
 };
@@ -73,17 +182,22 @@ ssj.util.ajax.prototype = {
   sendRequest(url, data, tmplId, method, pageName) {
     this.setMetaData(url, data, tmplId, method, pageName);
     var oSelf = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       $.ajax({
         url: oSelf.url,
-        method: oSelf.method,
+        method: oSelf.method, 
         data: oSelf.data,
-        success: function(data) {
+        success: function (data) {
           console.log(data);
+          oSelf.response = data;
           oSelf.increasePageNum(pageName);
-          resolve(oSelf.makeHtml(data));
+          if (tmplId === null) {
+            resolve(data);
+          } else {
+            resolve(oSelf.makeHtml(data));
+          }
         },
-        error: function(data) {
+        error: function (data) {
           reject(data);
         }
       });
@@ -92,16 +206,16 @@ ssj.util.ajax.prototype = {
   sendUpdateRequest(url, data, method) {
     this.setUpdateMetaData(url, data, method);
     var oSelf = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       $.ajax({
         url: oSelf.url,
         method: oSelf.method,
         data: oSelf.data,
-        success: function(data) {
+        success: function (data) {
           console.log(data);
           resolve(data);
         },
-        error: function(data) {
+        error: function (data) {
           reject(data);
         }
       });
@@ -114,6 +228,9 @@ ssj.util.ajax.prototype = {
   },
   getCurrentPageNum(pageName) {
     return !this.isPageEmpty(pageName) ? this.paging.get(pageName) : 1;
+  },
+  getResponseJson() {
+    return this.response;
   },
   isPageEmpty(pageName) {
     return !this.paging.get(pageName);
@@ -157,7 +274,7 @@ ssj.util.ajax.prototype = {
   }
 };
 
-ssj.util.spinner = function(options) {
+ssj.util.spinner = function (options) {
   $.extend(this, options);
   this.init();
 };
@@ -183,33 +300,7 @@ ssj.util.spinner.prototype = {
   }
 };
 
-ssj.util.swiper = function(options) {
-  this.metaData = options;
-  this.init();
-};
-
-ssj.util.swiper.prototype = {
-  init() {
-    this.initVar();
-  },
-  initVar() {
-    this.swiper = new Swiper(".swiper-container", this.metaData);
-  },
-  appendItem(slide) {
-    this.swiper.appendSlide(slide);
-  },
-  getActiveSlide() {
-    return this.swiper.slides[this.getActiveIndex()];
-  },
-  getActiveIndex() {
-    return this.swiper.activeIndex;
-  },
-  getTotalCount() {
-    return this.swiper.slides.length;
-  }
-};
-
-ssj.util.toast = function(options) {
+ssj.util.toast = function (options) {
   $.extend(this, options);
   this.init();
 };
@@ -221,7 +312,7 @@ ssj.util.toast.prototype = {
   assignElements() {
     this.toast = $(`<div class="toast scene_element"></div>`);
   },
-  show(message, duration) {
+  show(message, duration = 2000) {
     this.toast.text(message);
     this.duration = duration;
     $(".m-scene").append(this.toast);
@@ -244,10 +335,159 @@ ssj.util.toast.prototype = {
   }
 };
 
-$(function() {
+
+/*
+  saved : [] , 배열 내 아이템
+  {
+    'scrollTop': 0, //스크롤 탑 위치
+    'cards': null, //리스트의 카드들
+    'page': 1, //현재 보고 있는 페이지
+    'isEnded': false //카테고리의 글을 모두 불러왔는지?
+  }
+*/
+ssj.view.infiniteScroll = function (options) {
+  $.extend(this, options);
+  this.init();
+}
+
+ssj.view.infiniteScroll.prototype = {
+  init() {
+    this._assignElements();
+    this._attachEventHandler();
+    this._initVar();
+    this._setInitialCards();
+  },
+  _initVar() {
+    this.saved = [];
+    this.pending = false;
+    this.url = URL_READ_MAIN_CARD_DATA;
+    this.tmplId = ID_TMPL_MAIN_CARD;
+    this.method = 'GET';
+    this.tabcount = this.getTotalCateCount();
+    this._setInitialSavedData();
+  },
+  _assignElements() {
+    this.cardList = $('.main-sec__list');
+    this.headerWrap = $('.home_header_navlist');
+  },
+  _attachEventHandler() {
+    $(window).scroll(this.onScroll.bind(this));
+  },
+  onScroll() {
+    if (this.shouldTrigger() && !this.pending && !this.getCurrentSavedDatas().isEnded) {
+      this.pending = true;
+      var data = this._makeRequestData();
+      this.loadData(this.url, data).then( json => {
+        this.renderCards(json);
+        !json.length && this._setNoMoreData();
+        this.pending = false;
+        //hideSpinner();
+      }).catch(e => {
+        console.log(e);
+      });
+    }
+  },
+  loadData(url, data) {
+    return new Promise((resolve, reject) => {
+      $.get({
+        url, data,
+        success: function (data) { resolve(data) },
+        error: function (e) { reject(e) }
+      });
+    });
+  },
+  _setInitialCards() {
+    var data = this._makeRequestData();
+    this.loadData(this.url, data).then( json => {
+      this.renderCards(json);
+    }).catch( e => {
+      console.log(e);
+    });
+  },
+  switchCategory(){ //배열에 데이터가 있으면 복구, 없으면 요청
+    if (this.isEmptyCardList()){
+      this._setInitialCards();
+    }else{
+      this._restoreCardList();
+    }
+  },
+  saveCurrentState(){
+    var scrollTop = $(window).scrollTop();
+    var cards = this.cardList.children().detach();
+    $.extend(this.getCurrentSavedDatas(),{cards,scrollTop});
+  },
+  _restoreCardList(){
+    var current = this.getCurrentSavedDatas();
+    this.cardList.append(current.cards);
+  },
+  renderCards(json) {
+    console.log(json);
+    var tmpl = $.templates(this.tmplId);
+    var html = tmpl.render(json);
+    this.cardList.append(html);
+    this._increasePageNum();
+  },
+  shouldTrigger() {
+    var winH = $(window).height();
+    var docH = $(document).height();
+    var winTop = $(window).scrollTop();
+    return Math.ceil(winTop) >= docH - winH;
+  },
+  _setNoMoreData() {
+    this.saved[this.getCurrentCateNum()].isEnded = true;
+  },
+  _setInitialSavedData() {
+    for (var i = 0; i < this.tabcount; i++) { //카테고리 별로 필요한 데이터를 배열로 관리
+      this.saved.push({
+        'scrollTop': 0, //스크롤 탑 위치
+        'cards': null, //리스트의 카드들
+        'page': 1, //현재 보고 있는 페이지
+        'isEnded': false //카테고리의 글을 모두 불러왔는지?
+      });
+    }
+  },
+  _increasePageNum() {
+    this.saved[this.getCurrentCateNum()].page++;
+  },
+  _makeRequestData(){
+    return { page : this.getCurrentPageNum(), mainCategory : this.getCurrentCateNum()};
+  },
+  isEmptyCardList(){
+    var current = this.getCurrentSavedDatas();
+    return !current.cards || !current.cards.length;
+  },
+  getCurrentSavedDatas() {
+    var categoryNum = this.getCurrentCateNum();
+    return this.saved[categoryNum];
+  },
+  getTotalCateCount() {
+    return this.headerWrap.children().length + $('.mypage').children().length - 1;
+  },
+  getCurrentCateNum() {
+    return this.headerWrap.find('.on').val();
+  },
+  getCurrentPageNum() {
+    var category = this.getCurrentCateNum();
+    return this.saved[category].page;
+  },
+  getCurrentScrollTop() {
+    return this.getCurrentSavedDatas().scrollTop;
+  }
+}
+
+$(function () {
+  var varUA = navigator.userAgent.toLowerCase(); //userAgent 값 얻기
+  if (varUA.match('android') != null) {
+    $('body').addClass('body_and');
+  } else if (varUA.indexOf("iphone") > -1 || varUA.indexOf("ipad") > -1 || varUA.indexOf("ipod") > -1) {
+    $('body').addClass('body_ios');
+  } 
+  oAjax = new ssj.util.ajax();
+  oSpinner = new ssj.util.spinner();
+  oToast = new ssj.util.toast();
   "use strict";
 
-  $(".write__inparea").on("keyup", function() {
+  $(".write__inparea").on("keyup", function () {
     toggleInputBdr($(this));
     var writeWrap = $(".write__wrap");
     var writeInpArea = $(".write__inparea");
@@ -261,16 +501,16 @@ $(function() {
     }
   });
 
-  $(".write__inparea").on("focusin", ".write__inpcnt, .write__txtarea", function() {
+  $(".write__inparea").on("focusin", ".write__inpcnt, .write__txtarea", function () {
     $(this).addClass("focus");
   });
-  $(".write__inparea").on("focusout", ".write__inpcnt, .write__txtarea", function() {
+  $(".write__inparea").on("focusout", ".write__inpcnt, .write__txtarea", function () {
     $(this).removeClass("focus");
   });
 
   function isAllChecked() {
     var chk = 0;
-    $(".write__inparea").each(function(index, item) {
+    $(".write__inparea").each(function (index, item) {
       $(item).hasClass("on") ? chk++ : chk;
     });
     return chk == 3 ? true : false;
@@ -283,7 +523,7 @@ $(function() {
       //cacheLength: 2,
       onStart: {
         duration: 100, // Duration of our animation
-        render: function($container) {
+        render: function ($container) {
           // Add your CSS animation reversing class
           //$container.addClass('is-exiting');
           // Restart your animation
@@ -292,7 +532,7 @@ $(function() {
       },
       onReady: {
         duration: 0,
-        render: function($container, $newContent) {
+        render: function ($container, $newContent) {
           // Remove your CSS animation reversing class
           //$container.removeClass('is-exiting');
           // Inject the new content
@@ -302,85 +542,19 @@ $(function() {
     },
     smoothState = $page.smoothState(options).data("smoothState");
 
-  $(".result__write").on("keyup", function() {
-    if (
-      $(this)
-        .val()
-        .trim().length > 0
-    ) {
-      $(this)
-        .siblings("i")
-        .addClass("on");
+  $(".result__write").on("keyup", function () {
+    if ($(this).val().trim().length > 0) {
+      $(this).siblings("i").addClass("on");
     } else {
-      $(this)
-        .siblings("i")
-        .removeClass("on");
-    }
-  });
-
-  $(".modal").on("keyup", ".modal_inp", function(e) {
-    if (
-      $(this)
-        .val()
-        .trim().length === 0
-    ) {
-      //누구든 입력이 없으면 보더 삭제
-      $(this).removeClass("on");
-      $(this).removeClass("wrong");
-    } else {
-      $(this).addClass("on");
-    }
-  });
-
-  //회원가입 비밀번호 중복 체크
-  $("#join").on("keyup", "input[type = 'password']", function(e) {
-    var pwdInputs = $(e.delegateTarget).find("input[type='password']");
-    var index = pwdInputs.index($(this));
-    var me = $(this);
-    var other = $(pwdInputs[Number(!index)]);
-    var str1 = me.val();
-    var str2 = other.val();
-    if (!str1) {
-      me.removeClass("on");
-      me.removeClass("wrong");
-      return;
-    } else if (!str2) {
-      me.addClass("on");
-      return;
-    }
-
-    if (str1.length !== str2.length) {
-      //다른인풋이 비어있지 않을땐 길이가 같을때만 파랑 -> 빨강 보더
-      pwdInputs.removeClass("on");
-      pwdInputs.addClass("wrong");
-    } else {
-      if (str1 === str2) {
-        pwdInputs.removeClass("wrong");
-        pwdInputs.addClass("on");
-      } else {
-        $(this).removeClass("on");
-      }
-    }
-  });
-
-  //modal 제출 버튼 클릭시
-  $(".modal").on("click", ".modal_submit", function(e) {
-    var group = $(e.delegateTarget).find(".modal_inp");
-    var index = areNotCompleted(group);
-    if (index !== -1) {
-      setTimeout(function() {
-        $(group[index]).prop("placeholder", "항목을 입력해주세요.");
-        $(group[index]).focus();
-      }, 0);
-      return false;
+      $(this).siblings("i").removeClass("on");
     }
   });
 
   //토글
-  $(".rdo_toggle").on("click", function(e) {
+  $(".rdo_toggle").on("click", function (e) {
     var group = $(".rdo_toggle");
     var nowIdx = group.index($(this));
-    group.each(function(index, item) {
+    group.each(function (index, item) {
       if (index === nowIdx) {
         $(item).addClass("on");
         return;
@@ -390,7 +564,7 @@ $(function() {
   });
 
   //2종류 토글, On or off
-  $(".toggle_on_off").on("click", function(e) {
+  $(".toggle_on_off").on("click", function (e) {
     var group = $(".toggle_on_off");
     var nowIdx = group.index($(this));
     group.addClass("off").removeClass("on");
@@ -401,9 +575,10 @@ $(function() {
   });
 
   //아코디언탭
-  $(".acdo").on("click", ".acdo_open", function(e) {
+  $(".acdo").on("click", ".acdo_open", function (e) {
     var wrapper = $(e.delegateTarget);
     var hiddenArea = $(this).siblings(".acdo_cont");
     wrapper.toggleClass("on");
   });
 });
+
